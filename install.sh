@@ -20,21 +20,27 @@ fi
 # 2. Install dependencies
 echo "[1/4] Installing dependencies..."
 cd "$SCRIPT_DIR"
-npm install --legacy-peer-deps --silent 2>/dev/null
+bun install
 
 # 3. Restore internal SDKs from sourcemap
 echo "[2/4] Restoring internal SDKs..."
 for pkg in bedrock-sdk vertex-sdk foundry-sdk; do
   if [ -d "node_modules_sourcemap/@anthropic-ai/$pkg" ]; then
-    cp -r "node_modules_sourcemap/@anthropic-ai/$pkg" "node_modules/@anthropic-ai/$pkg" 2>/dev/null || true
+    mkdir -p "node_modules/@anthropic-ai"
+    cp -r "node_modules_sourcemap/@anthropic-ai/$pkg" "node_modules/@anthropic-ai/$pkg"
   fi
 done
 
 # 4. Build
 echo "[3/4] Building..."
-bun run build.ts 2>&1 | grep -E "^(Build|Output)" || true
+bun run build.ts
 
-# 5. Create symlink
+if [ ! -f "$INSTALL_DIR/cli.js" ]; then
+  echo "Error: Build failed — dist/cli.js not found"
+  exit 1
+fi
+
+# 5. Create nerv command
 echo "[4/4] Creating nerv command..."
 BIN_PATH="$HOME/.local/bin/nerv"
 mkdir -p "$(dirname "$BIN_PATH")"
@@ -44,17 +50,31 @@ exec node "$INSTALL_DIR/cli.js" "\$@"
 EOF
 chmod +x "$BIN_PATH"
 
+# Ensure ~/.local/bin is in PATH for current shell
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *)
+    SHELL_NAME="$(basename "$SHELL")"
+    case "$SHELL_NAME" in
+      zsh)  RC_FILE="$HOME/.zshrc" ;;
+      bash) RC_FILE="$HOME/.bashrc" ;;
+      *)    RC_FILE="" ;;
+    esac
+    if [ -n "$RC_FILE" ] && ! grep -q '\.local/bin' "$RC_FILE" 2>/dev/null; then
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$RC_FILE"
+      echo "  Added ~/.local/bin to PATH in $RC_FILE"
+    fi
+    export PATH="$HOME/.local/bin:$PATH"
+    ;;
+esac
+
 echo ""
 echo "✓ NERV CODE installed successfully!"
 echo ""
 echo "Usage:"
-echo "  nerv              # Interactive mode (in a real terminal)"
+echo "  nerv              # Interactive mode"
 echo "  nerv --version    # Show version"
 echo "  nerv --help       # Show help"
-echo "  nerv -p 'hello'   # Print mode (needs ANTHROPIC_API_KEY)"
+echo "  nerv -p 'hello'   # Print mode"
 echo ""
-echo "Make sure ~/.local/bin is in your PATH:"
-echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
-echo ""
-echo "NOTE: Must run in a real terminal (TTY) for interactive mode."
-echo "      If it appears to hang, you're likely in a non-TTY environment."
+echo "Run 'nerv' to start. If command not found, restart your terminal."
