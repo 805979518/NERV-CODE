@@ -1,0 +1,60 @@
+name: "人類補完計画 — Feature Request"
+description: "SEELE PROPOSAL. Propose an enhancement to NERV-CODE."
+title: "[人類補完計画] "
+labels: ["Pattern Orange"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ```
+        ╔══════════════════════════════════════════╗
+        ║  SEELE — HUMAN INSTRUMENTALITY COMMITTEE  ║
+        ║  Status: PROPOSAL SUBMITTED               ║
+        ║  "All's right with the world."            ║
+        ╚══════════════════════════════════════════╝
+        ```
+        Submit your proposal to the committee. Describe what you envision and why it matters.
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What feature or enhancement do you propose?
+      placeholder: "Describe the proposed enhancement..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this needed? What problem does it solve?
+      placeholder: "Explain why this enhancement would benefit NERV-CODE..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What area does this proposal affect?
+      options:
+        - "Theming — NERV/MAGI visual elements"
+        - "Build System — Compilation, bundling, plugins"
+        - "Documentation — Guides, README, translations"
+        - "Developer Experience — CLI, tooling, workflow"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered other approaches?
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Mockups, references, or other supporting material.

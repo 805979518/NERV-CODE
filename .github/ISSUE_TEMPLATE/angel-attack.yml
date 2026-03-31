@@ -1,0 +1,81 @@
+name: "使徒来袭 — Bug Report"
+description: "PATTERN BLUE DETECTED. Report anomalous behavior."
+title: "[使徒来袭] "
+labels: ["Pattern Blue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ```
+        ╔══════════════════════════════════════════╗
+        ║  MAGI SYSTEM — ANOMALY DETECTION         ║
+        ║  Status: PATTERN BLUE CONFIRMED           ║
+        ║  "God's in his heaven."                   ║
+        ╚══════════════════════════════════════════╝
+        ```
+        An Angel has been detected. Please provide MAGI with sufficient data for analysis.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Angel Classification
+      description: How severe is this anomaly?
+      options:
+        - "Sachiel — Low: cosmetic issue, minor UI glitch"
+        - "Shamshel — Medium: functional issue, degraded behavior"
+        - "Ramiel — High: blocking issue, feature broken"
+        - "Zeruel — Critical: data loss, crash, security issue"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Anomaly Description
+      description: What happened? What did you expect to happen?
+      placeholder: "Describe the anomaly detected by MAGI..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction Steps
+      description: MAGI requires precise data for analysis.
+      placeholder: |
+        1. Run `nerv ...`
+        2. Observe...
+        3. Expected...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: NERV-CODE Version
+      description: Output of `node dist/cli.js --version`
+      placeholder: "2.1.88 (NERV CODE)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node.js version, terminal emulator
+      placeholder: |
+        - OS: macOS 15.x / Ubuntu 24.04 / Windows 11
+        - Node: v22.x
+        - Terminal: iTerm2 / Terminal.app / Windows Terminal
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal Output / Screenshots
+      description: Attach relevant terminal output or screenshots.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other information that may help MAGI resolve this anomaly.
