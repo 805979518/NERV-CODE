@@ -35,20 +35,24 @@ export function isSeamlessBlockTerminal(): boolean {
   return (
     ['ghostty', 'kitty', 'wezterm', 'alacritty', 'iterm'].some(
       t => termProgram.includes(t) || term.includes(t),
-    ) || !!process.env.GHOSTTY_RESOURCES_DIR
+    ) ||
+    !!process.env.GHOSTTY_RESOURCES_DIR ||
+    !!process.env.ITERM_SESSION_ID ||
+    !!process.env.KITTY_PID
   )
 }
 
 /**
- * Converts Unicode block art to a terminal-safe fallback by replacing solid
- * blocks (█) with `#` and half-blocks (▄▀) with `.`.  The output preserves
- * exact column alignment so layouts remain stable.
+ * Converts Unicode block art to a terminal-safe fallback by replacing all
+ * block characters (█▄▀) with `#`.  Half-blocks lose sub-cell detail but
+ * produce a solid, readable silhouette on terminals where `.` would be
+ * nearly invisible against dark backgrounds.
  */
 export function blockArtToFallback(
   lines: readonly string[],
 ): readonly string[] {
   return lines.map(line =>
-    line.replace(/[█]/g, '#').replace(/[▄▀]/g, '.'),
+    line.replace(/[█▄▀]/g, '#'),
   )
 }
 
