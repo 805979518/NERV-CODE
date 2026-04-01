@@ -23,6 +23,35 @@ const CONTENT_PADDING = 2
 
 export type LayoutMode = 'horizontal' | 'compact'
 
+/**
+ * Detects terminals that render Unicode block characters with seamless line
+ * stacking (line-height ≈ 1.0, no visible gaps between ▄█▀ on adjacent lines).
+ * Returns true for terminals known to render blocks correctly; false triggers a
+ * hash-art fallback so the logo still looks good in Terminal.app, VS Code, etc.
+ */
+export function isSeamlessBlockTerminal(): boolean {
+  const termProgram = (process.env.TERM_PROGRAM ?? '').toLowerCase()
+  const term = (process.env.TERM ?? '').toLowerCase()
+  return (
+    ['ghostty', 'kitty', 'wezterm', 'alacritty', 'iterm'].some(
+      t => termProgram.includes(t) || term.includes(t),
+    ) || !!process.env.GHOSTTY_RESOURCES_DIR
+  )
+}
+
+/**
+ * Converts Unicode block art to a terminal-safe fallback by replacing solid
+ * blocks (█) with `#` and half-blocks (▄▀) with `.`.  The output preserves
+ * exact column alignment so layouts remain stable.
+ */
+export function blockArtToFallback(
+  lines: readonly string[],
+): readonly string[] {
+  return lines.map(line =>
+    line.replace(/[█]/g, '#').replace(/[▄▀]/g, '.'),
+  )
+}
+
 export type LayoutDimensions = {
   leftWidth: number
   rightWidth: number
