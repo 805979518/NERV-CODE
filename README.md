@@ -34,12 +34,6 @@
 irm https://raw.githubusercontent.com/805979518/NERV-CODE/main/install.ps1 | iex
 ```
 
-### Linux / macOS / Unix
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/805979518/NERV-CODE/main/install.sh | bash
-```
-
 安装后重启终端，输入 `nerv` 即可启动。
 
 ---
@@ -235,7 +229,7 @@ NERV-CODE/
 ## 致谢
 
 本项目站在巨人的肩膀上：
-
+- **[Ax1i1om/NERV-CODE](https://github.com/Ax1i1om/NERV-CODE)** — NERV-CODE 原设计者
 - **[zxdxjtu/claude-code-sourcemap](https://github.com/zxdxjtu/claude-code-sourcemap)** — 原始 sourcemap 提取和源码还原方法论
 - **[ChinaSiro/claude-code-sourcemap](https://github.com/ChinaSiro/claude-code-sourcemap)** — 构建系统、文档和社区贡献
 
