@@ -2,34 +2,20 @@
 
 <#
 .SYNOPSIS
-    NERV-CODE Windows Installation Script
+    NERV-CODE Windows 一键安装脚本
 .DESCRIPTION
-    Installs NERV-CODE on Windows systems with Node.js >= 18
+    从 GitHub 下载 NERV-CODE 并在 Windows 上安装
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File install.ps1
+    irm https://raw.githubusercontent.com/805979518/NERV-CODE/main/install.ps1 | iex
 #>
 
 param(
-    [switch]$SkipBunInstall
+    [string]$RepoUrl = "https://github.com/805979518/NERV-CODE",
+    [string]$Branch = "main"
 )
 
 $ErrorActionPreference = "Stop"
-$ProgressPreference = "SilentlyContinue"  # Speed up Web requests
-
-# When run via iex (pipe), MyInvocation.MyCommand.Path is null
-# Use current directory as fallback
-if ($MyInvocation.MyCommand.Path) {
-    $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-} else {
-    $ScriptDir = Get-Location
-}
-$InstallDir = $ScriptDir
-$CliPath = Join-Path $InstallDir "dist\cli.js"
-
-# Installation paths
-$ProgramDataDir = "$env:LOCALAPPDATA\Programs\NERV-CODE"
-$BinDir = Join-Path $ProgramDataDir "bin"
-$NervExe = Join-Path $BinDir "nerv.bat"
+$ProgressPreference = "SilentlyContinue"
 
 function Write-Step($Number, $Total, $Message) {
     Write-Host ""
@@ -64,19 +50,7 @@ function Get-NodeVersion() {
 function Install-Bun() {
     Write-Host ""
     Write-Host "Bun not found. Installing Bun..." -ForegroundColor Yellow
-
-    $bunInstallScript = @"
-    const { execSync } = require('child_process');
     try {
-        execSync(' powershell -ExecutionPolicy Bypass -Command "irm bun.sh/install.ps1|iex"', {stdio: 'inherit'});
-    } catch (e) {
-        console.error('Failed to install Bun:', e.message);
-        process.exit(1);
-    }
-"@
-
-    try {
-        # Use official Bun installation script
         powershell -ExecutionPolicy Bypass -Command "irm bun.sh/install.ps1|iex"
         Write-Success "Bun installed successfully"
     } catch {
@@ -89,7 +63,7 @@ function Add-ToPath($PathToAdd) {
     $currentPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
     if ($currentPath -notlike "*$PathToAdd*") {
         [System.Environment]::SetEnvironmentVariable("Path", "$currentPath;$PathToAdd", "User")
-        $env:Path = "$env:Path;$PathToAdd"  # Update current session
+        $env:Path = "$env:Path;$PathToAdd"
         return $true
     }
     return $false
@@ -112,7 +86,7 @@ Write-Host ""
 # ============================================
 # Step 1: Check Prerequisites
 # ============================================
-Write-Step 1 5 "Checking prerequisites..."
+Write-Step 1 6 "Checking prerequisites..."
 
 $nodeVersion = Get-NodeVersion
 if (-not $nodeVersion) {
@@ -130,7 +104,7 @@ Write-Success "Node.js v$nodeVersion detected"
 
 # Check for Bun
 $bunVersion = Test-Command "bun"
-if (-not $bunVersion -and -not $SkipBunInstall) {
+if (-not $bunVersion) {
     Install-Bun
     $bunVersion = Test-Command "bun"
 }
@@ -138,13 +112,50 @@ if (-not $bunVersion -and -not $SkipBunInstall) {
 if ($bunVersion) {
     Write-Success "Bun v$bunVersion detected"
 } else {
-    Write-Warn "Bun not detected. Will try npm as fallback for installation"
+    Write-Warn "Bun not detected. Will try npm as fallback"
 }
 
 # ============================================
-# Step 2: Install Dependencies
+# Step 2: Download NERV-CODE from GitHub
 # ============================================
-Write-Step 2 5 "Installing dependencies..."
+Write-Step 2 6 "Downloading NERV-CODE from GitHub..."
+
+$TempDir = Join-Path $env:TEMP "NERV-CODE-$(Get-Random)"
+New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
+
+Write-Host "  Downloading to $TempDir..." -ForegroundColor Gray
+try {
+    # Download as zip
+    $ZipUrl = "$RepoUrl/archive/refs/heads/$Branch.zip"
+    $ZipPath = Join-Path $TempDir "nerv-code.zip"
+
+    Write-Host "  URL: $ZipUrl" -ForegroundColor Gray
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest -Uri $ZipUrl -OutFile $ZipPath -UseBasicParsing
+
+    # Extract
+    Write-Host "  Extracting..." -ForegroundColor Gray
+    Expand-Archive -Path $ZipPath -DestinationPath $TempDir -Force
+
+    # Find extracted folder
+    $ExtractedDirs = Get-ChildItem -Path $TempDir -Directory | Where-Object { $_.Name -like "NERV-CODE*" }
+    if ($ExtractedDirs) {
+        $ScriptDir = $ExtractedDirs[0].FullName
+    } else {
+        throw "Could not find extracted NERV-CODE folder"
+    }
+
+    Write-Success "Downloaded and extracted"
+} catch {
+    Write-Err "Failed to download: $_"
+    Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+    exit 1
+}
+
+# ============================================
+# Step 3: Install Dependencies
+# ============================================
+Write-Step 3 6 "Installing dependencies..."
 
 Set-Location $ScriptDir
 
@@ -158,63 +169,69 @@ if ($bunVersion) {
 
 if ($LASTEXITCODE -ne 0) {
     Write-Err "Failed to install dependencies"
+    Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
     exit 1
 }
 Write-Success "Dependencies installed"
 
 # ============================================
-# Step 3: Restore Internal SDKs
+# Step 4: Restore Internal SDKs
 # ============================================
-Write-Step 3 5 "Restoring internal SDKs..."
+Write-Step 4 6 "Restoring internal SDKs..."
 
 & "$ScriptDir\scripts\copy-sdks.ps1"
 
 Write-Success "SDKs restored"
 
 # ============================================
-# Step 4: Build
+# Step 5: Build
 # ============================================
-Write-Step 4 5 "Building NERV-CODE..."
+Write-Step 5 6 "Building NERV-CODE..."
 
 if ($bunVersion) {
     bun run build.ts
 } else {
-    # Fallback: try npm run build
     npm run build
 }
 
 if ($LASTEXITCODE -ne 0) {
     Write-Err "Build failed"
+    Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
     exit 1
 }
 
-if (-not (Test-Path $CliPath)) {
-    Write-Err "Build failed — cli.js not found at $CliPath"
+if (-not (Test-Path "$ScriptDir\dist\cli.js")) {
+    Write-Err "Build failed — cli.js not found"
     exit 1
 }
-Write-Success "Build completed: $CliPath"
+Write-Success "Build completed"
 
 # ============================================
-# Step 5: Create Command and Setup PATH
+# Step 6: Create Command and Setup PATH
 # ============================================
-Write-Step 5 5 "Setting up NERV command..."
+Write-Step 6 6 "Setting up NERV command..."
 
-# Create installation directory and copy files
+# Installation paths
+$ProgramDataDir = "$env:LOCALAPPDATA\Programs\NERV-CODE"
+$BinDir = Join-Path $ProgramDataDir "bin"
+$NervExe = Join-Path $BinDir "nerv.bat"
+
+# Create directories
 if (-not (Test-Path $BinDir)) {
     New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
 }
-
-# Copy the built CLI to installation directory
-$destCliPath = Join-Path $ProgramDataDir "dist\cli.js"
-$destScriptsDir = Join-Path $ProgramDataDir "scripts"
-
-if (-not (Test-Path (Join-Path $ProgramDataDir "dist"))) {
+if (-not (Test-Path "$ProgramDataDir\dist")) {
     New-Item -ItemType Directory -Force -Path "$ProgramDataDir\dist" | Out-Null
 }
-Copy-Item -Recurse -Force "$InstallDir\dist" "$ProgramDataDir\"
-Copy-Item -Recurse -Force "$InstallDir\scripts" "$ProgramDataDir\"
+if (-not (Test-Path "$ProgramDataDir\scripts")) {
+    New-Item -ItemType Directory -Force -Path "$ProgramDataDir\scripts" | Out-Null
+}
 
-# Create nerv.bat in bin directory
+# Copy built files
+Copy-Item -Recurse -Force "$ScriptDir\dist" "$ProgramDataDir\"
+Copy-Item -Recurse -Force "$ScriptDir\scripts" "$ProgramDataDir\"
+
+# Create nerv.bat
 $batContent = @"
 @echo off
 setlocal
@@ -235,6 +252,9 @@ if ($pathAdded) {
     Write-Success "$BinDir is already in PATH"
 }
 
+# Cleanup temp
+Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+
 # ============================================
 # Completion
 # ============================================
@@ -251,6 +271,5 @@ Write-Host "  nerv --version    # Show version" -ForegroundColor Gray
 Write-Host "  nerv --help       # Show help" -ForegroundColor Gray
 Write-Host "  nerv -p 'hello'   # Print mode" -ForegroundColor Gray
 Write-Host ""
-Write-Host "You can also run directly from the installed location:" -ForegroundColor Yellow
-Write-Host "  $NervExe" -ForegroundColor Gray
+Write-Host "Note: Restart your terminal before first use to update PATH." -ForegroundColor Yellow
 Write-Host ""
