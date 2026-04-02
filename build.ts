@@ -3,6 +3,17 @@
  * Uses Bun's bundler to compile the TypeScript source into a single executable CLI.
  */
 import { $ } from 'bun';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Helper to resolve shim paths correctly on all platforms
+function shimPath(shimName: string): string {
+  return path.resolve(__dirname, 'shims', shimName);
+}
 
 const MACRO_DEFINES: Record<string, string> = {
   'MACRO.VERSION': JSON.stringify('2.1.88'),
@@ -92,7 +103,7 @@ async function build() {
           // Intercept bun:bundle imports and replace with our shim
           build.onResolve({ filter: /^bun:bundle$/ }, () => {
             return {
-              path: new URL('./shims/bun-bundle.ts', import.meta.url).pathname,
+              path: shimPath('bun-bundle.ts'),
             };
           });
         },
@@ -115,7 +126,7 @@ async function build() {
           const stubbedPackages = /^(color-diff-napi|modifiers-napi|@ant\/claude-for-chrome-mcp|@ant\/computer-use-mcp|@ant\/computer-use-swift|@anthropic-ai\/sandbox-runtime|@anthropic-ai\/mcpb|@anthropic-ai\/claude-agent-sdk)$/;
           build.onResolve({ filter: stubbedPackages }, () => {
             return {
-              path: new URL('./shims/native-stubs.ts', import.meta.url).pathname,
+              path: shimPath('native-stubs.ts'),
             };
           });
         },
@@ -144,10 +155,14 @@ async function build() {
     process.exit(1);
   }
 
-  // Add shebang to output
+  // Add shebang to output (only on Unix-like systems, not Windows)
   const cliPath = './dist/cli.js';
   const content = await Bun.file(cliPath).text();
-  await Bun.write(cliPath, `#!/usr/bin/env node\n${content}`);
+  const isWindows = process.platform === 'win32';
+  const outputContent = isWindows
+    ? content  // Windows uses .bat files instead of shebang
+    : `#!/usr/bin/env node\n${content}`;
+  await Bun.write(cliPath, outputContent);
 
   console.log(`Build succeeded! Output: ${result.outputs.map(o => o.path).join(', ')}`);
   console.log(`Output size: ${(result.outputs[0]?.size || 0) / 1024 / 1024} MB`);

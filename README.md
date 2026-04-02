@@ -61,16 +61,61 @@ This project stands on the shoulders of giants:
 ### Prerequisites
 
 - **Node.js** >= 18
-- **Bun** >= 1.0 (build only)
+- **Bun** >= 1.0 (build only, recommended)
 - An **Anthropic API key** (for actual Claude conversations)
 
-### One-Click Install
+### One-Click Install (Linux/macOS)
 
 ```bash
 bash install.sh
 ```
 
 The script will install dependencies, restore internal SDKs, build the project, and create a `nerv` command in `~/.local/bin/`.
+
+### Windows Installation
+
+On Windows, use PowerShell:
+
+```powershell
+# Open PowerShell as Administrator or with sufficient permissions
+powershell -ExecutionPolicy Bypass -File install.ps1
+```
+
+The script will:
+1. Check for Node.js >= 18
+2. Install Bun if not present
+3. Install dependencies
+4. Restore internal SDKs
+5. Build the project
+6. Create a `nerv` command in `%LOCALAPPDATA%\Programs\NERV-CODE\bin\`
+7. Add the binary directory to your system PATH
+
+After installation, restart your terminal and run `nerv` to start.
+
+**Manual Windows Build:**
+
+```powershell
+# 1. Install dependencies
+bun install
+# or: npm install --legacy-peer-deps
+
+# 2. Restore Anthropic internal SDKs
+powershell -ExecutionPolicy Bypass -File scripts/copy-sdks.ps1
+
+# 3. Build
+bun run build.ts
+# or: npm run build:win
+```
+
+**Run on Windows:**
+
+```powershell
+# From installation directory
+node dist/cli.js --version
+
+# Or use the installed nerv command
+nerv --version
+```
 
 ### Manual Build
 
@@ -224,10 +269,14 @@ NERV-CODE/
 │   ├── constants/              # NERV-themed prompts & verbs
 │   └── utils/                  # Git, model, auth, settings
 ├── shims/                      # Build-time module shims
+├── scripts/                    # Build & utility scripts
+│   ├── copy-sdks.ps1           # SDK copy script (Windows)
+│   └── nerv.bat                # Windows entry script
 ├── docs/                       # Documentation
 ├── .github/                    # Issue & PR templates
 ├── build.ts                    # Bun bundler configuration
-├── install.sh                  # One-click install script
+├── install.sh                  # One-click install script (Unix)
+├── install.ps1                 # One-click install script (Windows)
 ├── package.json                # Dependencies (84+)
 └── tsconfig.json               # TypeScript configuration
 ```

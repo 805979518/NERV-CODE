@@ -10,6 +10,9 @@
   },
   "scripts": {
     "build": "bun run build.ts",
+    "build:win": "bun run build.ts",
+    "install:win": "powershell -ExecutionPolicy Bypass -File install.ps1",
+    "copy:sdk": "powershell -ExecutionPolicy Bypass -File scripts/copy-sdks.ps1",
     "start": "node dist/cli.js",
     "nerv": "node dist/cli.js"
   },
