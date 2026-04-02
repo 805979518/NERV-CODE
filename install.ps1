@@ -137,12 +137,23 @@ try {
     Write-Host "  Extracting..." -ForegroundColor Gray
     Expand-Archive -Path $ZipPath -DestinationPath $TempDir -Force
 
-    # Find extracted folder
-    $ExtractedDirs = Get-ChildItem -Path $TempDir -Directory | Where-Object { $_.Name -like "NERV-CODE*" }
-    if ($ExtractedDirs) {
+    # Find extracted folder (GitHub creates NERV-CODE-branchName folder)
+    $AllDirs = Get-ChildItem -Path $TempDir -Directory
+    Write-Host "  Found directories: $($AllDirs.Name -join ', ')" -ForegroundColor Gray
+
+    $ExtractedDirs = $AllDirs | Where-Object { $_.Name -like "NERV-CODE*" }
+    if ($ExtractedDirs -and $ExtractedDirs.Count -gt 0) {
         $ScriptDir = $ExtractedDirs[0].FullName
+        Write-Host "  ScriptDir set to: $ScriptDir" -ForegroundColor Gray
     } else {
-        throw "Could not find extracted NERV-CODE folder"
+        # Try to find any folder containing scripts
+        $ScriptsFolder = Get-ChildItem -Path $TempDir -Recurse -Directory | Where-Object { $_.Name -eq "scripts" } | Select-Object -First 1
+        if ($ScriptsFolder) {
+            $ScriptDir = $ScriptsFolder.Parent.FullName
+            Write-Host "  ScriptDir (via scripts): $ScriptDir" -ForegroundColor Gray
+        } else {
+            throw "Could not find extracted NERV-CODE folder. TempDir: $TempDir"
+        }
     }
 
     Write-Success "Downloaded and extracted"
