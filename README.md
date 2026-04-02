@@ -24,140 +24,77 @@
   <b>God's in his heaven. All's right with the world.</b>
 </p>
 
-<p align="center">
-  <a href="./README.zh-CN.md">中文文档</a>
-</p>
+---
+
+## ⬡ 一键安装 (One-Click Install)
+
+### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/805979518/NERV-CODE/main/install.ps1 | iex
+```
+
+### Linux / macOS / Unix
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/805979518/NERV-CODE/main/install.sh | bash
+```
+
+安装后重启终端，输入 `nerv` 即可启动。
 
 ---
 
-## MAGI System Online
+## 第壱話: MAGI System Online
 
-**NERV-CODE** is a NERV/MAGI-themed restoration of the Claude Code CLI (v2.1.88), reconstructed from the public npm package's sourcemap. The full TypeScript source has been extracted, themed with Neon Genesis Evangelion aesthetics, and can be compiled and run as a fully functional AI coding assistant.
+**NERV-CODE** 是以《新世纪福音战士》(Neon Genesis Evangelion) 为主题重构的 Claude Code CLI (v2.1.88)。通过 npm 包的 sourcemap 还原完整的 TypeScript 源码，并融合 NERV/MAGI 风格主题。
 
-This is a **research & fan project** — all functionality comes from the original Claude Code; we only added the NERV paint job.
-
----
-
-## REFERENCE
-
-> In the spirit of open source community etiquette, we gratefully acknowledge:
-
-### Source Projects
-
-This project stands on the shoulders of giants:
-
-- **[zxdxjtu/claude-code-sourcemap](https://github.com/zxdxjtu/claude-code-sourcemap/tree/main)** — Original sourcemap extraction and source restoration methodology
-- **[ChinaSiro/claude-code-sourcemap](https://github.com/ChinaSiro/claude-code-sourcemap)** — Build system, documentation, and community contributions
-
-### Disclaimer
-
-- **Claude Code** source code is copyright [Anthropic, PBC](https://www.anthropic.com). This project is reconstructed from publicly available npm packages for **research and educational purposes only**. Not for commercial use.
-- **Neon Genesis Evangelion** (新世紀エヴァンゲリオン) is created by Hideaki Anno / Studio Gainax / khara, Inc. All NERV/MAGI/EVA references in this project are a **fan tribute for entertainment purposes only** (新世纪福音战士致敬仅供娱乐). No affiliation with or endorsement by the rights holders.
+**这是一个研究 & 粉丝项目** — 所有功能来自原始 Claude Code，我们只添加了 NERV 的"皮肤"。
 
 ---
 
-## 第壱話: Quick Start — Angel Attack
+## 第弐話: 功能特点
 
-### Prerequisites
+- **NERV 主题界面** — NERV 红 (#B7282E) 配色、六边形 AT Field 元素
+- **MAGI System 身份** — AI 自我介绍为 NERV 人工智能部门操作终端
+- **完整 Claude Code 功能** — 45+ 工具、80+ 命令、多智能体系统
+- **EVA 风格提示语** — 60+ NERV 主题 spinner 动词 (MAGI Analyzing、AT Field Calculating...)
+- **交互式 TUI** — React/Ink 构建的终端界面
+
+---
+
+## 第参話: 快速开始
+
+### 系统要求
 
 - **Node.js** >= 18
-- **Bun** >= 1.0 (build only, recommended)
-- An **Anthropic API key** (for actual Claude conversations)
+- **Bun** >= 1.0 (推荐，用于构建)
+- **Anthropic API Key** (用于实际对话)
 
-### One-Click Install (Linux/macOS)
-
-```bash
-bash install.sh
-```
-
-The script will install dependencies, restore internal SDKs, build the project, and create a `nerv` command in `~/.local/bin/`.
-
-### Windows Installation
-
-On Windows, use PowerShell:
-
-```powershell
-# Open PowerShell as Administrator or with sufficient permissions
-powershell -ExecutionPolicy Bypass -File install.ps1
-```
-
-The script will:
-1. Check for Node.js >= 18
-2. Install Bun if not present
-3. Install dependencies
-4. Restore internal SDKs
-5. Build the project
-6. Create a `nerv` command in `%LOCALAPPDATA%\Programs\NERV-CODE\bin\`
-7. Add the binary directory to your system PATH
-
-After installation, restart your terminal and run `nerv` to start.
-
-**Manual Windows Build:**
-
-```powershell
-# 1. Install dependencies
-bun install
-# or: npm install --legacy-peer-deps
-
-# 2. Restore Anthropic internal SDKs
-powershell -ExecutionPolicy Bypass -File scripts/copy-sdks.ps1
-
-# 3. Build
-bun run build.ts
-# or: npm run build:win
-```
-
-**Run on Windows:**
-
-```powershell
-# From installation directory
-node dist/cli.js --version
-
-# Or use the installed nerv command
-nerv --version
-```
-
-### Manual Build
+### 安装后运行
 
 ```bash
-# 1. Install dependencies (推荐 bun，项目构建脚本依赖 bun)
-bun install
-# 如果使用 npm，必须加 --legacy-peer-deps：
-#   npm install --legacy-peer-deps
-# 原因：项目使用 react@19.3.0-canary，npm 的 semver 严格模式
-# 认为 canary 预发布版本不满足 react-compiler-runtime 的
-# peerDependency "^19"，会报依赖冲突。bun 无此问题。
-
-# 2. Restore Anthropic internal SDKs (from sourcemap)
-cp -r node_modules_sourcemap/@anthropic-ai/bedrock-sdk node_modules/@anthropic-ai/
-cp -r node_modules_sourcemap/@anthropic-ai/vertex-sdk node_modules/@anthropic-ai/
-cp -r node_modules_sourcemap/@anthropic-ai/foundry-sdk node_modules/@anthropic-ai/
-
-# 3. Build
-bun run build.ts
+nerv                    # 交互模式
+nerv --version         # 查看版本
+nerv --help             # 查看帮助
+nerv -p "你好"          # 管道模式
 ```
 
-### Run
+### API Key 配置
 
+设置环境变量：
+```powershell
+# Windows PowerShell
+$env:ANTHROPIC_API_KEY = "sk-ant-your-key-here"
+```
+
+或在命令行运行：
 ```bash
-# Version check
-node dist/cli.js --version    # → 2.1.88 (NERV CODE)
-
-# Help
-node dist/cli.js --help
-
-# Interactive mode (must be in a real terminal — TTY required)
-node dist/cli.js
-
-# Pipe mode (requires API key)
-ANTHROPIC_API_KEY=sk-ant-xxx node dist/cli.js -p 'hello'
+ANTHROPIC_API_KEY=sk-ant-your-key-here nerv -p "hello"
 ```
-
-> **Note**: Interactive mode requires a real terminal (Terminal.app, iTerm2, etc.). IDE integrated terminals may not work due to TTY detection. Set `CLAUDE_CODE_FORCE_INTERACTIVE=1` to force interactive mode.
 
 ---
 
-## 第弐話: Architecture — MAGI System Configuration
+## 第肆話: 架构 — MAGI System Configuration
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -184,50 +121,47 @@ ANTHROPIC_API_KEY=sk-ant-xxx node dist/cli.js -p 'hello'
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Core Modules
+### 核心模块
 
-| Module | Path | Role |
-|--------|------|------|
-| Bootstrap | `src/main.tsx` | CLI init, command routing |
-| Conversation Engine | `src/query.ts` + `src/QueryEngine.ts` | Stateful async generator, streaming SSE |
-| Tools | `src/tools/` (45 tools) | BashTool, FileEdit, AgentTool, MCPTool, etc. |
-| Commands | `src/commands/` (80+ commands) | CLI commands (commit, review, config, etc.) |
-| Components | `src/components/` | React (Ink) TUI components |
-| Services | `src/services/` | API client, MCP, context compression |
-| Constants | `src/constants/` | NERV-themed prompts, spinner verbs, figures |
+| 模块 | 路径 | 职责 |
+|------|------|------|
+| Bootstrap | `src/main.tsx` | CLI 初始化、命令路由 |
+| Conversation Engine | `src/query.ts` + `src/QueryEngine.ts` | 状态机异步生成器、流式 SSE |
+| Tools | `src/tools/` (45 工具) | BashTool、FileEdit、AgentTool、MCPTool 等 |
+| Commands | `src/commands/` (80+ 命令) | CLI 命令 (commit、review、config 等) |
+| Components | `src/components/` | React (Ink) TUI 组件 |
+| Services | `src/services/` | API 客户端、MCP、上下文压缩 |
 
-### Multi-Agent System
+### 多智能体系统
 
-Three agent types with EVA-inspired isolation levels:
+三种智能体类型，EVA 风格隔离级别：
 
-| Type | Isolation | EVA Analogy |
-|------|-----------|-------------|
-| **SubAgent** | Full context isolation | Separate Entry Plug |
-| **Fork** | Shared prompt cache | Dummy Plug System |
-| **Teammate** | Independent process, file mailbox | Multi-EVA Sortie |
+| 类型 | 隔离级别 | EVA 类比 |
+|------|---------|---------|
+| **SubAgent** | 完全上下文隔离 | 独立插入栓 |
+| **Fork** | 共享提示缓存 | 虚拟插入栓系统 |
+| **Teammate** | 独立进程、文件邮箱 | 多EVA出击 |
 
 ---
 
-## 第参話: NERV Theming — The Test
+## 第伍話: NERV 主题系统
 
-All modifications are **cosmetic only** — no behavioral changes to Claude.
+### 色彩系统 (`nerv-dark` 主题)
 
-### Color System (`nerv-dark` theme)
+| 颜色 | Hex | 用途 |
+|------|-----|------|
+| `nerv-red` | `#B7282E` | 主品牌色、Logo、重点 |
+| `nerv-red-light` | `#D4494F` | 悬停状态、闪烁效果 |
+| `terminal-black` | `#0A0A0C` | 主背景 |
+| `text-primary` | `#E8E6E3` | 主文字 |
+| `eva-purple` | `#6B3FA0` | 智能体配色 (EVA Unit-01) |
+| `eva-orange` | `#E87D2A` | 智能体配色 (EVA Unit-00) |
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `nerv-red` | `#B7282E` | Primary brand, logo, accents |
-| `nerv-red-light` | `#D4494F` | Hover states, shimmer |
-| `terminal-black` | `#0A0A0C` | Primary background |
-| `text-primary` | `#E8E6E3` | Main body text |
-| `eva-purple` | `#6B3FA0` | Agent accent (Unit-01) |
-| `eva-orange` | `#E87D2A` | Agent accent (Unit-00) |
+### 六边形主题
 
-### Hexagonal Motif
+所有菱形图标 (`◇`/`◆`) 替换为六边形 (`⬡`/`⬢`)，参考 AT Field 几何结构和 MAGI 六边形显示面板。
 
-All diamond icons (`◇`/`◆`) replaced with hexagons (`⬡`/`⬢`), referencing AT Field geometry and MAGI's hexagonal display panels.
-
-### MAGI Spinner Verbs (60+)
+### MAGI Spinner 动词 (60+)
 
 ```
 MAGI Analyzing...        Pattern Blue Scanning...     AT Field Calculating...
@@ -236,73 +170,87 @@ Terminal Dogma Accessing... Entry Plug Connecting...   S2 Engine Initializing...
 Dead Sea Scrolls Parsing... SEELE Protocol Decrypting... Eva Cage Preparing...
 ```
 
-### Welcome Screen
+### 欢迎界面
 
-Custom NERV emblem with fig leaf silhouette, rendered in NERV red. Greeting:
+带无花果叶剪影的 NERV 标志，以 NERV 红色渲染。
 
 > *God's in his heaven. All's right with the world.*
 
 ---
 
-## 作戦計画: Roadmap — Rebuild of NERV-CODE
+## 作戦計画: 路线图
 
-| Phase | Version | Codename | Status | Description |
-|-------|---------|----------|--------|-------------|
-| **序** | 1.0.0 | You Are (Not) Alone | **CURRENT** | Initial open-source release. Source restoration + NERV theming. |
-| **破** | 2.0.0 | You Can (Not) Advance | Planned | Extended theming (error screens, permission prompts, lifecycle messages). Plugin system. |
-| **Q** | 3.0.0 | You Can (Not) Redo | Planned | Major refactoring. Custom MAGI consensus mode for multi-agent. |
-| **終** | 3.0+1.0 | Thrice Upon a Time | Planned | Feature-complete. Stable release. Full NERV integration. |
+| 阶段 | 版本 | 代号 | 状态 | 描述 |
+|------|------|------|------|------|
+| **序** | 1.0.0 | You Are (Not) Alone | **当前** | 初始开源发布。源码还原 + NERV 主题化。 |
+| **破** | 2.0.0 | You Can (Not) Advance | 计划中 | 扩展主题化（错误界面、权限提示、生命周期消息）。插件系统。 |
+| **Q** | 3.0.0 | You Can (Not) Redo | 计划中 | 重构。多智能体自定义 MAGI 共识模式。 |
+| **終** | 3.0+1.0 | Thrice Upon a Time | 计划中 | 功能完整。稳定发布。完整 NERV 集成。 |
 
 ---
 
-## Project Structure
+## 项目结构
 
 ```
 NERV-CODE/
-├── src/                        # TypeScript source (1,884 files)
-│   ├── entrypoints/cli.tsx     # CLI entry point
-│   ├── main.tsx                # Bootstrap & command routing
-│   ├── tools/                  # 45 tool implementations
-│   ├── commands/               # 80+ CLI commands
-│   ├── services/               # API, MCP, compression, etc.
-│   ├── components/             # React (Ink) TUI components
-│   ├── constants/              # NERV-themed prompts & verbs
-│   └── utils/                  # Git, model, auth, settings
-├── shims/                      # Build-time module shims
-├── scripts/                    # Build & utility scripts
-│   ├── copy-sdks.ps1           # SDK copy script (Windows)
-│   └── nerv.bat                # Windows entry script
-├── docs/                       # Documentation
-├── .github/                    # Issue & PR templates
-├── build.ts                    # Bun bundler configuration
-├── install.sh                  # One-click install script (Unix)
-├── install.ps1                 # One-click install script (Windows)
-├── package.json                # Dependencies (84+)
-└── tsconfig.json               # TypeScript configuration
+├── src/                        # TypeScript 源码 (1,884 文件)
+│   ├── entrypoints/cli.tsx     # CLI 入口点
+│   ├── main.tsx                # 引导和命令路由
+│   ├── tools/                  # 45 工具实现
+│   ├── commands/               # 80+ CLI 命令
+│   ├── services/               # API、MCP、压缩等
+│   ├── components/             # React (Ink) TUI 组件
+│   ├── constants/              # NERV 主题提示语和动词
+│   └── utils/                 # Git、模型、认证、设置
+├── shims/                      # 构建时模块填充
+├── scripts/                    # 构建和工具脚本
+│   ├── copy-sdks.ps1          # SDK 复制脚本 (Windows)
+│   └── nerv.bat               # Windows 入口脚本
+├── docs/                       # 文档
+├── .github/                    # Issue 和 PR 模板
+├── build.ts                    # Bun 打包配置
+├── install.sh                  # 一键安装脚本 (Unix)
+├── install.ps1                 # 一键安装脚本 (Windows)
+├── package.json               # 依赖 (84+)
+└── tsconfig.json              # TypeScript 配置
 ```
 
 ---
 
-## Build System
+## 构建系统
 
-Uses **Bun Bundler** to compile TypeScript into a single ESM bundle via 4 custom plugins:
+使用 **Bun Bundler** 通过 4 个自定义插件将 TypeScript 编译为单个 ESM bundle：
 
-| Plugin | Purpose |
-|--------|---------|
-| `bun-bundle-shim` | Converts compile-time `feature()` to runtime `Set.has()` (78 feature flags) |
-| `react-compiler-runtime` | Redirects `react/compiler-runtime` to npm package |
-| `native-stubs` | Stubs 8 internal/native packages to empty modules |
-| `text-loader` | Imports `.md`/`.txt` files as string exports |
+| 插件 | 用途 |
+|------|------|
+| `bun-bundle-shim` | 将构建时 `feature()` 转换为运行时 `Set.has()` (78 个特性开关) |
+| `react-compiler-runtime` | 重定向 `react/compiler-runtime` 到 npm 包 |
+| `native-stubs` | 将 8 个内部/原生包填充为空模块 |
+| `text-loader` | 将 `.md`/`.txt` 文件作为字符串导出导入 |
 
-See [docs/BUILD.md](docs/BUILD.md) for detailed build documentation.
+详细构建文档见 [docs/BUILD.md](docs/BUILD.md)。
 
 ---
 
-## License
+## 致谢
 
-[MIT License](LICENSE)
+本项目站在巨人的肩膀上：
 
-**Important**: The original Claude Code source is copyright Anthropic, PBC. EVA/NERV references are a fan tribute — see [LICENSE](LICENSE) for full notices.
+- **[zxdxjtu/claude-code-sourcemap](https://github.com/zxdxjtu/claude-code-sourcemap)** — 原始 sourcemap 提取和源码还原方法论
+- **[ChinaSiro/claude-code-sourcemap](https://github.com/ChinaSiro/claude-code-sourcemap)** — 构建系统、文档和社区贡献
+
+### 免责声明
+
+- **Claude Code** 源码版权归 [Anthropic, PBC](https://www.anthropic.com) 所有。本项目从公开的 npm 包重构，仅用于**研究和教育目的**，不可商业使用。
+- **新世纪福音战士** (新世紀エヴァンゲリオン) 由庵野秀明 / Gainax / khara, Inc. 创作。本项目中所有 NERV/MAGI/EVA 引用均为**粉丝致敬，仅供娱乐**。与权利持有人无任何关联或背书。
+
+---
+
+## 许可证
+
+[MIT 许可证](LICENSE)
+
+**重要**: 原始 Claude Code 源码版权归 Anthropic, PBC 所有。EVA/NERV 引用为粉丝致敬 — 见 [LICENSE](LICENSE) 完整声明。
 
 ---
 
