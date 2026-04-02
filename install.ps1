@@ -16,7 +16,13 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"  # Speed up Web requests
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# When run via iex (pipe), MyInvocation.MyCommand.Path is null
+# Use current directory as fallback
+if ($MyInvocation.MyCommand.Path) {
+    $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+} else {
+    $ScriptDir = Get-Location
+}
 $InstallDir = $ScriptDir
 $CliPath = Join-Path $InstallDir "dist\cli.js"
 
