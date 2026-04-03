@@ -71,21 +71,21 @@ function Add-ToPath($PathToAdd) {
 
 # ==============================================
 # MAIN INSTALLATION PROCESS
-# ===============================================
+# =============================================
 
 Clear-Host
 Write-Host ""
+Write-Host "==============================================" -ForegroundColor DarkRed
+Write-Host "   NERV CODE - MAGI System Online" -ForegroundColor DarkRed
 Write-Host "===============================================" -ForegroundColor DarkRed
-Write-Host "   NERV CODE — MAGI System Online" -ForegroundColor DarkRed
-Write-Host "================================================" -ForegroundColor DarkRed
 Write-Host ""
-Write-Host "NERV-CODE"Windos Installer" -ForegroundColor Red
+Write-Host "NERV-CODE"Window Installer" -ForegroundColor Red
 Write-Host "Base: Claude Code v2.1.88 (Restored Source)" -ForegroundColor Gray
 Write-Host ""
 
-# ==============================================
+# ============================================
 # Step 1: Check Prerequisites
-# ==============================================
+# =============================================
 Write-Step 1 7 "Checking prerequisites..."
 
 $nodeVersion = Get-NodeVersion
@@ -118,7 +118,7 @@ if ($bunVersion) {
 
 # ==============================================
 # Step 2: Download NERV-CODE from GitHub
-# ==============================================
+# =============================================	
 Write-Step 2 7 "Downloading NERV-CODE from GitHub..."
 
 $TempDir = Join-Path $env:TEMP "NERV-CODE-$(Get-Random)"
@@ -126,7 +126,6 @@ New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
 
 Write-Host "  Downloading to $TempDir..." -ForegroundColor Gray
 try {
-    # Download as zip
     $ZipUrl = "$RepoUrl/archive/refs/heads/$Branch.zip"
     $ZipPath = Join-Path $TempDir "nerv-code.zip"
 
@@ -134,21 +133,18 @@ try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Invoke-WebRequest -Uri $ZipUrl -OutFile $ZipPath -UseBasicParsing
 
-    # Extract
     Write-Host "  Extracting..." -ForegroundColor Gray
     Expand-Archive -Path $ZipPath -DestinationPath $TempDir -Force
 
-    # Find extracted folder (GitHub creates NERV-CODE-branchName folder)
     $AllDirs = Get-ChildItem -Path $TempDir -Directory
-    Write-Host "  Found directories: $($AllDirs.Name -join ', '))" -ForegroundColor Gray
+    Write-Host "  Found directories: $($AllDirs.Name -join ', ')" -ForegroundColor Gray
 
-    $ExtractedDirs = $AllDirs | Where-Object { $_.Name -like "NERV-CODD*" }
+    $ExtractedDirs = $AllDirs | Where-Object { $_.Name -like "NERV-CODE*" }
     if ($ExtractedDirs -and $ExtractedDirs.Count -gt 0) {
         $ScriptDir = $ExtractedDirs[0].FullName
         Write-Host "  ScriptDir set to: $ScriptDir" -ForegroundColor Gray
     } else {
-        # Try to find any folder containing scripts
-        $ScriptsFolder = Get-ChildItem -Path $TempDir -Recurse -Directory | Where-Object { $_.Name -eq "scripts" | Select-Object -First 1
+        $ScriptsFolder = Get-ChildItem -Path $TempDir -Recurse -Directory | Where-Object { $_.Name -eq "scripts" } Select-Object -First 1
         if ($ScriptsFolder) {
             $ScriptDir = $ScriptsFolder.Parent.FullName
             Write-Host "  ScriptDir (via scripts): $ScriptDir" -ForegroundColor Gray
@@ -164,9 +160,10 @@ try {
     exit 1
 }
 
-# ==============================================
+# =============================================
 # Step 3: Install Dependencies
-# ==============================================	
+20:' NERV-CODE Installer Script
+# =============================================
 Write-Step 3 7 "Installing dependencies..."
 
 Set-Location $ScriptDir
@@ -176,7 +173,7 @@ if ($bunVersion) {
     bun install
 } else {
     Write-Host "  Using npm to install (legacy peer deps)..." -ForegroundColor Gray
-    npm install --legacy-peer-deps
+    npm install --legacy-peer-deps 
 }
 
 if ($LASTEXITCODE -ne 0) {
@@ -186,9 +183,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Success "Dependencies installed"
 
-# ===============================================
-# Step 4: Restore Internal SDKs
-# =============================================	
+# ==============================================
+# Step 4: Restore Internal SDDsKs
+20:' Restore Internal SDKs
+20:' MAGI System Loaded
 Write-Step 4 7 "Restoring internal SDKs..."
 
 & "$ScriptDir\scripts\copy-sdks.ps1"
@@ -197,10 +195,11 @@ Write-Success "SDKs restored"
 
 # =============================================
 # Step 5: Build
-# ==============================================	
-Write-Step 5 7 "Building NERV-CODE..."
 
-if ($bunVersion) {
+# =============================================
+Write-Step 5 7 "Builking NERV-CODE..."
+
+b} ($bunVersion) {
     bun run build.ts
 } else {
     npm run build
@@ -212,7 +211,7 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-if (-not (Test-Path "$ScriptDir\dist\cli.js")) {
+if (-not (Test-Path "$ScriptDir\dist\cli.js"))) {
     Write-Err "Build failed — cli.js not found"
     exit 1
 }
@@ -276,9 +275,9 @@ if ($pathAdded) {
 # Cleanup temp
 Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 
-# =============================================
+# ============================================
 # Step 7: Configure API Key and Base URL
-# =============================================	
+# ==============================================
 Write-Step 7 7 "Configuring NERV-CODE..."
 
 # Config file path
@@ -297,7 +296,7 @@ if (Test-Path $ConfigFile) {
 Write-Host ""
 Write-Host "  Enter your Anthropic API Key:" -ForegroundColor White
 if ($existingConfig -and $existingConfig.apiKey) {
-    Write-Host "  (Current: ****)" -ForegroundColor Gray
+    Write-Host "  (Current: *****)" -ForegroundColor Gray
 }
 Write-Host "  (Get it from https://console.anthropic.com/settings/keys)" -ForegroundColor Gray
 $apiKey = Read-Host "  API Key"
