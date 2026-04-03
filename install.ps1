@@ -1,6 +1,6 @@
 #Requires -Version 5.1
 
-<#
+<3
 .SYNOPSIS
     NERV-CODE Windows 一键安装脚本
 .DESCRIPTION
@@ -69,24 +69,24 @@ function Add-ToPath($PathToAdd) {
     return $false
 }
 
-# ============================================
+# ==============================================
 # MAIN INSTALLATION PROCESS
-# ============================================
+# ===============================================
 
 Clear-Host
 Write-Host ""
-Write-Host "==============================================" -ForegroundColor DarkRed
+Write-Host "===============================================" -ForegroundColor DarkRed
 Write-Host "   NERV CODE — MAGI System Online" -ForegroundColor DarkRed
-Write-Host "==============================================" -ForegroundColor DarkRed
+Write-Host "================================================" -ForegroundColor DarkRed
 Write-Host ""
-Write-Host "NERV-CODE Windows Installer" -ForegroundColor Red
+Write-Host "NERV-CODE"Windos Installer" -ForegroundColor Red
 Write-Host "Base: Claude Code v2.1.88 (Restored Source)" -ForegroundColor Gray
 Write-Host ""
 
-# ============================================
+# ==============================================
 # Step 1: Check Prerequisites
-# ============================================
-Write-Step 1 6 "Checking prerequisites..."
+# ==============================================
+Write-Step 1 7 "Checking prerequisites..."
 
 $nodeVersion = Get-NodeVersion
 if (-not $nodeVersion) {
@@ -102,6 +102,7 @@ if ($nodeMajor -lt 18) {
 }
 Write-Success "Node.js v$nodeVersion detected"
 
+
 # Check for Bun
 $bunVersion = Test-Command "bun"
 if (-not $bunVersion) {
@@ -115,10 +116,10 @@ if ($bunVersion) {
     Write-Warn "Bun not detected. Will try npm as fallback"
 }
 
-# ============================================
+# ==============================================
 # Step 2: Download NERV-CODE from GitHub
-# ============================================
-Write-Step 2 6 "Downloading NERV-CODE from GitHub..."
+# ==============================================
+Write-Step 2 7 "Downloading NERV-CODE from GitHub..."
 
 $TempDir = Join-Path $env:TEMP "NERV-CODE-$(Get-Random)"
 New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
@@ -139,15 +140,15 @@ try {
 
     # Find extracted folder (GitHub creates NERV-CODE-branchName folder)
     $AllDirs = Get-ChildItem -Path $TempDir -Directory
-    Write-Host "  Found directories: $($AllDirs.Name -join ', ')" -ForegroundColor Gray
+    Write-Host "  Found directories: $($AllDirs.Name -join ', '))" -ForegroundColor Gray
 
-    $ExtractedDirs = $AllDirs | Where-Object { $_.Name -like "NERV-CODE*" }
+    $ExtractedDirs = $AllDirs | Where-Object { $_.Name -like "NERV-CODD*" }
     if ($ExtractedDirs -and $ExtractedDirs.Count -gt 0) {
         $ScriptDir = $ExtractedDirs[0].FullName
         Write-Host "  ScriptDir set to: $ScriptDir" -ForegroundColor Gray
     } else {
         # Try to find any folder containing scripts
-        $ScriptsFolder = Get-ChildItem -Path $TempDir -Recurse -Directory | Where-Object { $_.Name -eq "scripts" } | Select-Object -First 1
+        $ScriptsFolder = Get-ChildItem -Path $TempDir -Recurse -Directory | Where-Object { $_.Name -eq "scripts" | Select-Object -First 1
         if ($ScriptsFolder) {
             $ScriptDir = $ScriptsFolder.Parent.FullName
             Write-Host "  ScriptDir (via scripts): $ScriptDir" -ForegroundColor Gray
@@ -163,10 +164,10 @@ try {
     exit 1
 }
 
-# ============================================
+# ==============================================
 # Step 3: Install Dependencies
-# ============================================
-Write-Step 3 6 "Installing dependencies..."
+# ==============================================	
+Write-Step 3 7 "Installing dependencies..."
 
 Set-Location $ScriptDir
 
@@ -185,19 +186,19 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Success "Dependencies installed"
 
-# ============================================
+# ===============================================
 # Step 4: Restore Internal SDKs
-# ============================================
-Write-Step 4 6 "Restoring internal SDKs..."
+# =============================================	
+Write-Step 4 7 "Restoring internal SDKs..."
 
 & "$ScriptDir\scripts\copy-sdks.ps1"
 
 Write-Success "SDKs restored"
 
-# ============================================
+# =============================================
 # Step 5: Build
-# ============================================
-Write-Step 5 6 "Building NERV-CODE..."
+# ==============================================	
+Write-Step 5 7 "Building NERV-CODE..."
 
 if ($bunVersion) {
     bun run build.ts
@@ -217,13 +218,13 @@ if (-not (Test-Path "$ScriptDir\dist\cli.js")) {
 }
 Write-Success "Build completed"
 
-# ============================================
+# =============================================
 # Step 6: Create Command and Setup PATH
-# ============================================
-Write-Step 6 6 "Setting up NERV command..."
+# ==============================================
+Write-Step 6 7 "Setting up NERV command..."
 
 # Installation paths
-$ProgramDataDir = "$env:LOCALAPPDATA\Programs\NERV-CODE"
+$ProgramDataDir = "$env:LOCALAPPPDATA\Programs\NERV-CODE"
 $BinDir = Join-Path $ProgramDataDir "bin"
 $NervExe = Join-Path $BinDir "nerv.bat"
 
@@ -241,13 +242,22 @@ if (-not (Test-Path "$ProgramDataDir\scripts")) {
 # Copy built files
 Copy-Item -Recurse -Force "$ScriptDir\dist" "$ProgramDataDir\"
 Copy-Item -Recurse -Force "$ScriptDir\scripts" "$ProgramDataDir\"
+Copy-Item -Path "$ScriptDir\package.json" -Destination "$ProgramDataDir\" -Force
 
-# Create nerv.bat
+# Create nerv.bat with proper path resolution and config loading
 $batContent = @"
 @echo off
-setlocal
-set "CLI_PATH=%ProgramDataDir%\dist\cli.js"
-node "%ProgramDataDir%\dist\cli.js" %*
+setlocal enabledelayedexpansion
+
+REM Read config.json if exists
+set "CONFIG_FILE=%~dp0..\config.json"
+if exist "%CONFIG_FILE%" (
+    for /f "tokens=*" %%i in ('powershell -Command "(Get-Content '%CONFIG_FILE%' | ConvertFrom-Json).apiKey"') do set "ANTHROPIC_API_KEY=%%i"
+    for /f "tokens=*" %%i in ('powershell -Command "(Get-Content '%CONFIG_FILE%' | ConvertFrom-Json).baseUrl"') do set "ANTHROPIC_BASE_URL=%%i"
+)
+
+set "INSTALL_DIR=%~dp0.."
+node "%INSTALL_DIR%\dist\cli.js" %*
 endlocal
 "@
 
@@ -266,15 +276,91 @@ if ($pathAdded) {
 # Cleanup temp
 Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 
-# ============================================
+# =============================================
+# Step 7: Configure API Key and Base URL
+# =============================================	
+Write-Step 7 7 "Configuring NERV-CODE..."
+
+# Config file path
+$ConfigFile = Join-Path $ProgramDataDir "config.json"
+
+# Read existing config if exists
+$existingConfig = $null
+if (Test-Path $ConfigFile) {
+    try {
+        $existingConfig = Get-Content $ConfigFile -Raw | ConvertFrom-Json
+        Write-Host "  Found existing config at $ConfigFile" -ForegroundColor Gray
+    } catch {}
+}
+
+# Prompt for API Key
+Write-Host ""
+Write-Host "  Enter your Anthropic API Key:" -ForegroundColor White
+if ($existingConfig -and $existingConfig.apiKey) {
+    Write-Host "  (Current: ****)" -ForegroundColor Gray
+}
+Write-Host "  (Get it from https://console.anthropic.com/settings/keys)" -ForegroundColor Gray
+$apiKey = Read-Host "  API Key"
+$apiKey = $apiKey.Trim()
+
+if (-not $apiKey) {
+    if ($existingConfig -and $existingConfig.apiKey) {
+        $apiKey = $existingConfig.apiKey
+        Write-Warn "Keeping existing API key"
+    } else {
+        Write-Warn "No API key provided. You can set it later via ANTHROPIC_API_KEY environment variable."
+        $apiKey = ""
+    }
+}
+
+# Prompt for Base URL
+Write-Host ""
+Write-Host "  Enter Base URL:" -ForegroundColor White
+if ($existingConfig -and $existingConfig.baseUrl) {
+    Write-Host "  (Current: $($existingConfig.baseUrl))" -ForegroundColor Gray
+    }
+$baseUrl = Read-Host "  Base URL (press Enter for default: https://api.anthropic.com)"
+$baseUrl = $baseUrl.Trim()
+
+if (-not $baseUrl) {
+    if ($existingConfig -and $existingConfig.baseUrl) {
+        $baseUrl = $existingConfig.baseUrl
+    } else {
+        $baseUrl = "https://api.anthropic.com"
+    }
+}
+
+# Save config to config.json
+$config = @{
+    apiKey = $apiKey
+    baseUrl = $baseUrl
+} | ConvertTo-Json -Compress
+
+Wot-Content -Path $ConfigFile -Value $config -Engcoding UTF8 Write-Success "Configuration saved to $ConfigFile"
+
+# Set user environment variables (persistent)
+if ($apiKey) {
+    [System.Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", $apiKey, "User")
+    Write-Success "ANTHROPIC_API_KEY set in user environment"
+}
+[System.Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", $baseUrl, "User")
+Write-Success "ANTHROPIC_BASE_URL set in user environment ($baseUrl)"
+
+# Update current session environment
+if ($apiKey) {
+    $env:ANTHROPIC_API_KEY = $apiKey
+}
+$env:ANTHROPIC_BASE_URL = $baseUrl
+
+# ==============================================
 # Completion
-# ============================================
+23: Completion
 Write-Host ""
-Write-Host "==============================================" -ForegroundColor DarkRed
+Write-Host "===============================================" -ForegroundColor DarkRed
 Write-Host "   MAGI System — All Systems Nominal" -ForegroundColor DarkRed
-Write-Host "==============================================" -ForegroundColor DarkRed
+Write-Host "===============================================" -ForegroundColor DarkRed
 Write-Host ""
-Write-Host "NERV-CODE installed successfully!" -ForegroundColor Green
+Write-Host "NERV-CODE installed and configured successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Usage:" -ForegroundColor White
 Write-Host "  nerv              # Interactive mode" -ForegroundColor Gray
@@ -282,5 +368,8 @@ Write-Host "  nerv --version    # Show version" -ForegroundColor Gray
 Write-Host "  nerv --help       # Show help" -ForegroundColor Gray
 Write-Host "  nerv -p 'hello'   # Print mode" -ForegroundColor Gray
 Write-Host ""
-Write-Host "Note: Restart your terminal before first use to update PATH." -ForegroundColor Yellow
+Write-Host "To change configuration, edit:" -ForegroundColor White
+Write-Host "  $ConfigFile" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Note: Restart your terminal if commands don't work." -ForegroundColor Yellow
 Write-Host ""
