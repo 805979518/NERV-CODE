@@ -26,6 +26,8 @@
 
 ---
 
+##本项目完全建立在**[Ax1i1om/NERV-CODE](https://github.com/Ax1i1om/NERV-CODE)**之上，做了Windows适配，以及Minimax API适配。
+
 ## ⬡ 一键安装 (One-Click Install)
 
 ### Windows (PowerShell)
