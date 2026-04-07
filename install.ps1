@@ -231,10 +231,14 @@ if (-not (Test-Path "$ProgramDataDir\dist")) {
 if (-not (Test-Path "$ProgramDataDir\scripts")) {
     New-Item -ItemType Directory -Force -Path "$ProgramDataDir\scripts" | Out-Null
 }
+if (-not (Test-Path "$ProgramDataDir\node_modules")) {
+    New-Item -ItemType Directory -Force -Path "$ProgramDataDir\node_modules" | Out-Null
+}
 
 Copy-Item -Recurse -Force "$ScriptDir\dist" "$ProgramDataDir\"
 Copy-Item -Recurse -Force "$ScriptDir\scripts" "$ProgramDataDir\"
 Copy-Item -Path "$ScriptDir\package.json" -Destination "$ProgramDataDir\" -Force
+Copy-Item -Recurse -Force "$ScriptDir\node_modules" "$ProgramDataDir\"
 
 $batContent = '@echo off
 setlocal enabledelayedexpansion
@@ -246,6 +250,7 @@ if exist "%CONFIG_FILE%" (
 )
 
 set "INSTALL_DIR=%~dp0.."
+set "NODE_PATH=%INSTALL_DIR%\node_modules"
 node "%INSTALL_DIR%\dist\cli.js" %*
 endlocal
 '
