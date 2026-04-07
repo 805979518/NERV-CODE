@@ -1,6 +1,6 @@
 #Requires -Version 5.1
 
-<3
+<#
 .SYNOPSIS
     NERV-CODE Windows 一键安装脚本
 .DESCRIPTION
@@ -69,23 +69,23 @@ function Add-ToPath($PathToAdd) {
     return $false
 }
 
-# ==============================================
+# ============================================
 # MAIN INSTALLATION PROCESS
-# =============================================
+# ============================================
 
 Clear-Host
 Write-Host ""
 Write-Host "==============================================" -ForegroundColor DarkRed
 Write-Host "   NERV CODE - MAGI System Online" -ForegroundColor DarkRed
-Write-Host "===============================================" -ForegroundColor DarkRed
+Write-Host "==============================================" -ForegroundColor DarkRed
 Write-Host ""
-Write-Host "NERV-CODE"Window Installer" -ForegroundColor Red
+Write-Host "NERV-CODE Windows Installer" -ForegroundColor Red
 Write-Host "Base: Claude Code v2.1.88 (Restored Source)" -ForegroundColor Gray
 Write-Host ""
 
 # ============================================
 # Step 1: Check Prerequisites
-# =============================================
+# ============================================
 Write-Step 1 7 "Checking prerequisites..."
 
 $nodeVersion = Get-NodeVersion
@@ -102,7 +102,6 @@ if ($nodeMajor -lt 18) {
 }
 Write-Success "Node.js v$nodeVersion detected"
 
-
 # Check for Bun
 $bunVersion = Test-Command "bun"
 if (-not $bunVersion) {
@@ -116,9 +115,9 @@ if ($bunVersion) {
     Write-Warn "Bun not detected. Will try npm as fallback"
 }
 
-# ==============================================
+# ============================================
 # Step 2: Download NERV-CODE from GitHub
-# =============================================	
+# ============================================
 Write-Step 2 7 "Downloading NERV-CODE from GitHub..."
 
 $TempDir = Join-Path $env:TEMP "NERV-CODE-$(Get-Random)"
@@ -144,7 +143,7 @@ try {
         $ScriptDir = $ExtractedDirs[0].FullName
         Write-Host "  ScriptDir set to: $ScriptDir" -ForegroundColor Gray
     } else {
-        $ScriptsFolder = Get-ChildItem -Path $TempDir -Recurse -Directory | Where-Object { $_.Name -eq "scripts" } Select-Object -First 1
+        $ScriptsFolder = Get-ChildItem -Path $TempDir -Recurse -Directory | Where-Object { $_.Name -eq "scripts" } | Select-Object -First 1
         if ($ScriptsFolder) {
             $ScriptDir = $ScriptsFolder.Parent.FullName
             Write-Host "  ScriptDir (via scripts): $ScriptDir" -ForegroundColor Gray
@@ -160,10 +159,9 @@ try {
     exit 1
 }
 
-# =============================================
+# ============================================
 # Step 3: Install Dependencies
-20:' NERV-CODE Installer Script
-# =============================================
+# ============================================
 Write-Step 3 7 "Installing dependencies..."
 
 Set-Location $ScriptDir
@@ -173,7 +171,7 @@ if ($bunVersion) {
     bun install
 } else {
     Write-Host "  Using npm to install (legacy peer deps)..." -ForegroundColor Gray
-    npm install --legacy-peer-deps 
+    npm install --legacy-peer-deps
 }
 
 if ($LASTEXITCODE -ne 0) {
@@ -183,23 +181,21 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Success "Dependencies installed"
 
-# ==============================================
-# Step 4: Restore Internal SDDsKs
-20:' Restore Internal SDKs
-20:' MAGI System Loaded
+# ============================================
+# Step 4: Restore Internal SDKs
+# ============================================
 Write-Step 4 7 "Restoring internal SDKs..."
 
 & "$ScriptDir\scripts\copy-sdks.ps1"
 
 Write-Success "SDKs restored"
 
-# =============================================
+# ============================================
 # Step 5: Build
+# ============================================
+Write-Step 5 7 "Building NERV-CODE..."
 
-# =============================================
-Write-Step 5 7 "Builking NERV-CODE..."
-
-b} ($bunVersion) {
+if ($bunVersion) {
     bun run build.ts
 } else {
     npm run build
@@ -211,23 +207,21 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-if (-not (Test-Path "$ScriptDir\dist\cli.js"))) {
-    Write-Err "Build failed — cli.js not found"
+if (-not (Test-Path "$ScriptDir\dist\cli.js")) {
+    Write-Err "Build failed - cli.js not found"
     exit 1
 }
 Write-Success "Build completed"
 
-# =============================================
+# ============================================
 # Step 6: Create Command and Setup PATH
-# ==============================================
+# ============================================
 Write-Step 6 7 "Setting up NERV command..."
 
-# Installation paths
-$ProgramDataDir = "$env:LOCALAPPPDATA\Programs\NERV-CODE"
+$ProgramDataDir = "$env:LOCALAPPDATA\Programs\NERV-CODE"
 $BinDir = Join-Path $ProgramDataDir "bin"
 $NervExe = Join-Path $BinDir "nerv.bat"
 
-# Create directories
 if (-not (Test-Path $BinDir)) {
     New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
 }
@@ -238,32 +232,27 @@ if (-not (Test-Path "$ProgramDataDir\scripts")) {
     New-Item -ItemType Directory -Force -Path "$ProgramDataDir\scripts" | Out-Null
 }
 
-# Copy built files
 Copy-Item -Recurse -Force "$ScriptDir\dist" "$ProgramDataDir\"
 Copy-Item -Recurse -Force "$ScriptDir\scripts" "$ProgramDataDir\"
 Copy-Item -Path "$ScriptDir\package.json" -Destination "$ProgramDataDir\" -Force
 
-# Create nerv.bat with proper path resolution and config loading
-$batContent = @"
-@echo off
+$batContent = '@echo off
 setlocal enabledelayedexpansion
 
-REM Read config.json if exists
 set "CONFIG_FILE=%~dp0..\config.json"
 if exist "%CONFIG_FILE%" (
-    for /f "tokens=*" %%i in ('powershell -Command "(Get-Content '%CONFIG_FILE%' | ConvertFrom-Json).apiKey"') do set "ANTHROPIC_API_KEY=%%i"
-    for /f "tokens=*" %%i in ('powershell -Command "(Get-Content '%CONFIG_FILE%' | ConvertFrom-Json).baseUrl"') do set "ANTHROPIC_BASE_URL=%%i"
+    for /f "tokens=*" %%i in (''powershell -Command "(Get-Content ''%CONFIG_FILE%'' | ConvertFrom-Json).apiKey"'') do set "ANTHROPIC_API_KEY=%%i"
+    for /f "tokens=*" %%i in (''powershell -Command "(Get-Content ''%CONFIG_FILE%'' | ConvertFrom-Json).baseUrl"'') do set "ANTHROPIC_BASE_URL=%%i"
 )
 
 set "INSTALL_DIR=%~dp0.."
 node "%INSTALL_DIR%\dist\cli.js" %*
 endlocal
-"@
+'
 
 Set-Content -Path $NervExe -Value $batContent -Encoding ASCII
 Write-Success "Created $NervExe"
 
-# Add to PATH
 $pathAdded = Add-ToPath $BinDir
 if ($pathAdded) {
     Write-Success "Added $BinDir to system PATH"
@@ -272,18 +261,15 @@ if ($pathAdded) {
     Write-Success "$BinDir is already in PATH"
 }
 
-# Cleanup temp
 Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 
 # ============================================
 # Step 7: Configure API Key and Base URL
-# ==============================================
+# ============================================
 Write-Step 7 7 "Configuring NERV-CODE..."
 
-# Config file path
 $ConfigFile = Join-Path $ProgramDataDir "config.json"
 
-# Read existing config if exists
 $existingConfig = $null
 if (Test-Path $ConfigFile) {
     try {
@@ -292,11 +278,10 @@ if (Test-Path $ConfigFile) {
     } catch {}
 }
 
-# Prompt for API Key
 Write-Host ""
 Write-Host "  Enter your Anthropic API Key:" -ForegroundColor White
 if ($existingConfig -and $existingConfig.apiKey) {
-    Write-Host "  (Current: *****)" -ForegroundColor Gray
+    Write-Host "  (Current: ****)" -ForegroundColor Gray
 }
 Write-Host "  (Get it from https://console.anthropic.com/settings/keys)" -ForegroundColor Gray
 $apiKey = Read-Host "  API Key"
@@ -312,12 +297,11 @@ if (-not $apiKey) {
     }
 }
 
-# Prompt for Base URL
 Write-Host ""
 Write-Host "  Enter Base URL:" -ForegroundColor White
 if ($existingConfig -and $existingConfig.baseUrl) {
     Write-Host "  (Current: $($existingConfig.baseUrl))" -ForegroundColor Gray
-    }
+}
 $baseUrl = Read-Host "  Base URL (press Enter for default: https://api.anthropic.com)"
 $baseUrl = $baseUrl.Trim()
 
@@ -329,15 +313,14 @@ if (-not $baseUrl) {
     }
 }
 
-# Save config to config.json
 $config = @{
     apiKey = $apiKey
     baseUrl = $baseUrl
 } | ConvertTo-Json -Compress
 
-Wot-Content -Path $ConfigFile -Value $config -Engcoding UTF8 Write-Success "Configuration saved to $ConfigFile"
+Set-Content -Path $ConfigFile -Value $config -Encoding UTF8
+Write-Success "Configuration saved to $ConfigFile"
 
-# Set user environment variables (persistent)
 if ($apiKey) {
     [System.Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", $apiKey, "User")
     Write-Success "ANTHROPIC_API_KEY set in user environment"
@@ -345,19 +328,18 @@ if ($apiKey) {
 [System.Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL", $baseUrl, "User")
 Write-Success "ANTHROPIC_BASE_URL set in user environment ($baseUrl)"
 
-# Update current session environment
 if ($apiKey) {
     $env:ANTHROPIC_API_KEY = $apiKey
 }
 $env:ANTHROPIC_BASE_URL = $baseUrl
 
-# ==============================================
+# ============================================
 # Completion
-23: Completion
+# ============================================
 Write-Host ""
-Write-Host "===============================================" -ForegroundColor DarkRed
-Write-Host "   MAGI System — All Systems Nominal" -ForegroundColor DarkRed
-Write-Host "===============================================" -ForegroundColor DarkRed
+Write-Host "==============================================" -ForegroundColor DarkRed
+Write-Host "   MAGI System - All Systems Nominal" -ForegroundColor DarkRed
+Write-Host "==============================================" -ForegroundColor DarkRed
 Write-Host ""
 Write-Host "NERV-CODE installed and configured successfully!" -ForegroundColor Green
 Write-Host ""
