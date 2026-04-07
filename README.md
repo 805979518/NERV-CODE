@@ -36,6 +36,9 @@
 irm https://raw.githubusercontent.com/805979518/NERV-CODE/main/install.ps1 | iex
 ```
 
+安装时会要求提供API Key和Base URL, 以MiniMax为例：
+  Base URL = https://api.minimaxi.com/anthropic
+  API Key = YOUR_API_KEY(eg. sk-cp-...)
 安装后重启终端，输入 `nerv` 即可启动。
 
 ---
